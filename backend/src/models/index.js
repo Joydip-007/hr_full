@@ -1,17 +1,19 @@
-const Employee = require('./Employee');
-const Department = require('./Department');
-const Job = require('./Job');
 const Location = require('./Location');
-const Country = require('./Country');
-const Region = require('./Region');
-const JobHistory = require('./JobHistory');
+const Company = require('./Company');
+const Position = require('./Position');
+const Benefit = require('./Benefit');
+const Requirement = require('./Requirement');
+const JobSeeker = require('./JobSeeker');
+const Employee = require('./Employee');
+const JobApplication = require('./JobApplication');
 
 module.exports = {
-  Employee,
-  Department,
-  Job,
   Location,
-  Country,
-  Region,
-  JobHistory
+  Company,
+  Position,
+  Benefit,
+  Requirement,
+  JobSeeker,
+  Employee,
+  JobApplication
 };
