@@ -43,7 +43,7 @@ function Dashboard() {
   };
 
   const getStatusBadge = (status) => {
-    const statusClass = status?.toLowerCase().replace(' ', '-') || 'applied';
+    const statusClass = status?.toLowerCase().replace(/\s+/g, '-') || 'applied';
     return <span className={`badge badge-${statusClass}`}>{status}</span>;
   };
 
