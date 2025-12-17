@@ -125,6 +125,39 @@ npm start
 
 The frontend will be available at `http://localhost:3000`
 
+## 🚀 Deployment
+
+This application is ready to deploy on Render.com with full production configuration.
+
+### Quick Deploy Options
+
+1. **One-Click Deploy** (Recommended)
+   - Uses the `render.yaml` blueprint file
+   - Automatically creates all services
+   - See [DEPLOYMENT.md](DEPLOYMENT.md) for details
+
+2. **Manual Deploy**
+   - Deploy each service separately
+   - More control over configuration
+   - Full guide in [DEPLOYMENT.md](DEPLOYMENT.md)
+
+### What Gets Deployed
+
+- **Backend API**: Node.js/Express web service
+- **Frontend**: React static site
+- **Database**: PostgreSQL (or MySQL with Docker)
+
+### Environment Variables Required
+
+**Backend:**
+- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`
+- `JWT_SECRET`, `NODE_ENV`, `FRONTEND_URL`
+
+**Frontend:**
+- `REACT_APP_API_URL`
+
+📖 **Full deployment guide:** [DEPLOYMENT.md](DEPLOYMENT.md)
+
 ## API Endpoints
 
 ### Locations
