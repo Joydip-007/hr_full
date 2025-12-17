@@ -9,6 +9,38 @@ const api = axios.create({
   },
 });
 
+// Add auth token to requests
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+// Auth Service
+export const authService = {
+  register: (data) => api.post('/auth/register', data),
+  login: (data) => api.post('/auth/login', data),
+  adminLogin: (data) => api.post('/auth/admin/login', data),
+  getProfile: () => api.get('/auth/profile'),
+  logout: () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+  },
+  getUser: () => {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  },
+  isAuthenticated: () => {
+    return !!localStorage.getItem('token');
+  },
+  isAdmin: () => {
+    const user = authService.getUser();
+    return user && user.role === 'admin';
+  }
+};
+
 // Locations
 export const locationService = {
   getAll: () => api.get('/locations'),

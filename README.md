@@ -183,11 +183,37 @@ The frontend will be available at `http://localhost:3000`
 - `PATCH /api/applications/:id/status` - Update status
 - `DELETE /api/applications/:id` - Delete application
 
+### Authentication
+- `POST /api/auth/register` - Register new user (creates user + job seeker profile)
+- `POST /api/auth/login` - User login
+- `POST /api/auth/admin/login` - Admin login
+- `GET /api/auth/profile` - Get current user profile (requires authentication)
+
 ## Technology Stack
 
-- **Backend**: Node.js, Express.js, MySQL2
+- **Backend**: Node.js, Express.js, MySQL2, JWT, bcrypt
 - **Frontend**: React, React Router, Axios
 - **Database**: MySQL
+
+## Features
+
+### User Authentication
+- User registration with automatic job seeker profile creation
+- Login/logout functionality
+- JWT-based authentication
+- Admin and applicant roles
+
+### Job Applications
+- Browse open positions
+- Apply to positions with "+" button
+- View application status
+- Admin dashboard to manage all applications
+
+### Admin Panel
+- Admin-only login
+- View all applications
+- Filter applications by status
+- Update application status
 
 ## Sample Data
 
@@ -201,6 +227,18 @@ The database comes pre-populated with:
 - 10 Employees
 - Sample skills, degrees, experiences, volunteer work, and awards
 - 11 Job Applications with various statuses
+- 4 Users (1 admin, 3 applicants)
+
+## Default Credentials
+
+### Admin User
+- Email: admin@hrdb.com
+- Password: password123
+
+### Sample Applicant Users
+- john.smith@email.com / password123
+- emily.johnson@email.com / password123
+- michael.williams@email.com / password123
 
 ## License
 

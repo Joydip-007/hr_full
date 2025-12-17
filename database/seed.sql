@@ -9,6 +9,7 @@ USE hr_database;
 -- ============================================
 SET FOREIGN_KEY_CHECKS = 0;
 
+TRUNCATE TABLE users;
 TRUNCATE TABLE job_applications;
 TRUNCATE TABLE employee_awards;
 TRUNCATE TABLE job_seeker_awards;
@@ -299,6 +300,19 @@ INSERT INTO job_applications (application_id, job_seeker_id, position_id, status
 (11, 10, 10, 'Applied');
 
 -- ============================================
+-- USERS (password is 'password123' hashed with bcrypt)
+-- ============================================
+-- Admin user
+INSERT INTO users (user_id, email, password, first_name, last_name, role, job_seeker_id) VALUES 
+(1, 'admin@hrdb.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Admin', 'User', 'admin', NULL);
+
+-- Sample applicant users (linked to job seekers)
+INSERT INTO users (user_id, email, password, first_name, last_name, role, job_seeker_id) VALUES 
+(2, 'john.smith@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'John', 'Smith', 'applicant', 1),
+(3, 'emily.johnson@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Emily', 'Johnson', 'applicant', 2),
+(4, 'michael.williams@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Michael', 'Williams', 'applicant', 3);
+
+-- ============================================
 -- SEED DATA COMPLETE
 -- ============================================
 SELECT 'Seed data loaded successfully!' AS status;
@@ -310,3 +324,4 @@ SELECT CONCAT('Requirements: ', COUNT(*)) AS count FROM requirements;
 SELECT CONCAT('Job Seekers: ', COUNT(*)) AS count FROM job_seekers;
 SELECT CONCAT('Employees: ', COUNT(*)) AS count FROM employees;
 SELECT CONCAT('Job Applications: ', COUNT(*)) AS count FROM job_applications;
+SELECT CONCAT('Users: ', COUNT(*)) AS count FROM users;

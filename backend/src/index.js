@@ -34,7 +34,8 @@ app.get('/', (req, res) => {
       requirements: '/api/requirements',
       jobSeekers: '/api/job-seekers',
       employees: '/api/employees',
-      applications: '/api/applications'
+      applications: '/api/applications',
+      auth: '/api/auth'
     }
   });
 });
