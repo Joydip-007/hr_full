@@ -100,6 +100,9 @@ const startServer = async () => {
     console.warn('⚠️  Please verify your database credentials and connection.');
   }
 
+  // Bind to 0.0.0.0 to accept connections from any network interface
+  // This is required for containerized deployments (Docker, Render, etc.)
+  // The service is still protected by Render's networking and your CORS configuration
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server is running on port ${PORT}`);
     console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);

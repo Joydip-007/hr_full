@@ -17,9 +17,14 @@ const dbConfig = {
 };
 
 // Add SSL configuration for production environments
-// Note: rejectUnauthorized is set to false for managed database services
-// (like Render PostgreSQL) that use self-signed certificates.
-// For production with proper SSL certificates, set DB_SSL_REJECT_UNAUTHORIZED=true
+// Note: rejectUnauthorized defaults to false for managed database services
+// (like Render PostgreSQL/MySQL) that may use self-signed or internal certificates.
+// 
+// Security trade-off: While rejectUnauthorized=false is less secure, it's necessary for
+// most managed database services. The connection is still encrypted via SSL/TLS.
+// 
+// To enable strict certificate validation (more secure but may not work with managed services):
+// Set environment variable: DB_SSL_REJECT_UNAUTHORIZED=true
 if (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false') {
   dbConfig.ssl = {
     rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true'

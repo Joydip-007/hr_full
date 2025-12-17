@@ -1,7 +1,26 @@
+# Render.com Blueprint for HR Database Application
+# 
+# ⚠️ IMPORTANT: DATABASE CONFIGURATION REQUIRED
+# This blueprint uses PostgreSQL (Render's free tier database) but the application
+# currently uses MySQL. Before deploying, you must:
+# 
+# Option 1 (Recommended): Convert to PostgreSQL
+#   1. Install pg package: Add "pg": "^8.11.0" to backend/package.json dependencies
+#   2. Update backend/src/config/database.js to use pg instead of mysql2
+#   3. Convert database/schema.sql to PostgreSQL syntax
+#   4. Convert database/seed.sql to PostgreSQL syntax
+#   See DEPLOYMENT.md for detailed migration guide
+# 
+# Option 2: Use MySQL (requires paid tier or custom Docker service)
+#   1. Remove the databases section below
+#   2. Deploy MySQL separately using database/Dockerfile
+#   3. Update DB_PORT env var to 3306
+# 
+# For detailed instructions, see DEPLOYMENT.md
+
 services:
   # Backend Web Service
-  # Note: This is configured for PostgreSQL by default (Render's recommended free tier)
-  # If using MySQL, change DB_PORT to 3306 and deploy MySQL via Docker (see database/Dockerfile)
+  # Note: Configured for PostgreSQL by default. See note above for MySQL.
   - type: web
     name: hr-backend
     runtime: node

@@ -8,6 +8,10 @@ FROM mysql:8.0
 # Set environment variables with defaults
 # These can be overridden when running the container
 ENV MYSQL_DATABASE=${MYSQL_DATABASE:-hr_database}
+
+# ⚠️ SECURITY WARNING: MYSQL_ROOT_HOST=% allows root connections from any host
+# In production, restrict this to specific IPs or use a non-root user
+# For better security, set MYSQL_ROOT_HOST to the specific host IP
 ENV MYSQL_ROOT_HOST=%
 
 # Copy initialization scripts

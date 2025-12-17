@@ -2,6 +2,25 @@
 
 Complete guide to deploying the HR Database application on Render.com with the latest 2024 UI.
 
+## ⚠️ Important: Database Configuration
+
+**This application currently uses MySQL** with MySQL-specific syntax in `schema.sql` and `seed.sql`. However, **Render's free tier only supports PostgreSQL**.
+
+**You have two options:**
+
+1. **PostgreSQL (Recommended for Render Free Tier)**:
+   - Convert `database/schema.sql` and `database/seed.sql` to PostgreSQL syntax
+   - Install `pg` package in backend: `npm install pg`
+   - Update database configuration to use `pg` instead of `mysql2`
+   - See [PostgreSQL Migration Guide](#postgresql-migration) below
+
+2. **MySQL (Requires Paid Tier or Alternative)**:
+   - Deploy MySQL via Docker on Render (requires paid tier)
+   - Use the provided `database/Dockerfile`
+   - Update `render.yaml` to use MySQL service instead of PostgreSQL
+
+**For quick start with free tier**: Follow the PostgreSQL option.
+
 ## Table of Contents
 1. [Introduction](#introduction)
 2. [Prerequisites](#prerequisites)
@@ -300,6 +319,175 @@ After running schema and seed files:
 1. Check backend logs: Should see "✓ Database connected successfully"
 2. Test API endpoint: `https://your-backend.onrender.com/health`
 3. Test data endpoint: `https://your-backend.onrender.com/api/locations`
+
+---
+
+## PostgreSQL Migration
+
+This section provides detailed guidance for converting the MySQL application to PostgreSQL for Render's free tier.
+
+### Step 1: Update Backend Dependencies
+
+Update `backend/package.json`:
+
+```json
+{
+  "dependencies": {
+    "pg": "^8.11.0",  // Add this line
+    "mysql2": "^3.6.5"  // Can remove if only using PostgreSQL
+  }
+}
+```
+
+### Step 2: Update Database Configuration
+
+Update `backend/src/config/database.js` to support both databases or switch to PostgreSQL:
+
+**Option A: PostgreSQL Only**
+```javascript
+const { Pool } = require('pg');
+require('dotenv').config();
+
+const dbConfig = {
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'postgres',
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME || 'hr_database',
+  port: process.env.DB_PORT || 5432,
+  max: 10,
+  connectionTimeoutMillis: 60000,
+  idleTimeoutMillis: 60000
+};
+
+// Add SSL for production
+if (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false') {
+  dbConfig.ssl = {
+    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true'
+  };
+}
+
+const pool = new Pool(dbConfig);
+
+const testConnection = async () => {
+  try {
+    const client = await pool.connect();
+    console.log('✓ Database connected successfully');
+    console.log(`✓ Connected to: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
+    client.release();
+    return true;
+  } catch (error) {
+    console.error('✗ Database connection failed:', error.message);
+    console.error('✗ Please check your database configuration');
+    return false;
+  }
+};
+
+module.exports = { pool, testConnection };
+```
+
+### Step 3: Convert SQL Files
+
+**Key MySQL to PostgreSQL Conversions:**
+
+1. **AUTO_INCREMENT → SERIAL**
+   ```sql
+   -- MySQL
+   location_id INT AUTO_INCREMENT PRIMARY KEY
+   
+   -- PostgreSQL
+   location_id SERIAL PRIMARY KEY
+   ```
+
+2. **DATETIME → TIMESTAMP**
+   ```sql
+   -- MySQL
+   applied_date DATETIME
+   
+   -- PostgreSQL
+   applied_date TIMESTAMP
+   ```
+
+3. **VARCHAR lengths (optional)**
+   ```sql
+   -- MySQL
+   email VARCHAR(255)
+   
+   -- PostgreSQL (same or use TEXT)
+   email VARCHAR(255)  -- or TEXT
+   ```
+
+4. **NOW() function (same in both)**
+   ```sql
+   -- Works in both
+   applied_date TIMESTAMP DEFAULT NOW()
+   ```
+
+5. **Foreign Key syntax (mostly same)**
+   ```sql
+   -- Both MySQL and PostgreSQL
+   FOREIGN KEY (company_id) REFERENCES Company(company_id)
+   ```
+
+**Example Converted Table:**
+```sql
+-- PostgreSQL version
+CREATE TABLE Location (
+    location_id SERIAL PRIMARY KEY,
+    city VARCHAR(100) NOT NULL,
+    state VARCHAR(100) NOT NULL,
+    country VARCHAR(100) NOT NULL,
+    address TEXT
+);
+
+CREATE TABLE Company (
+    company_id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    num_employees INT,
+    rating DECIMAL(3,2),
+    location_id INT,
+    FOREIGN KEY (location_id) REFERENCES Location(location_id) ON DELETE SET NULL
+);
+
+-- Continue with other tables...
+```
+
+### Step 4: Update Query Syntax (if needed)
+
+Most queries work the same, but check for:
+
+**Parameterized Queries:**
+```javascript
+// MySQL (uses ?)
+const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+
+// PostgreSQL (uses $1, $2, etc.)
+const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+```
+
+**Return Values:**
+```javascript
+// MySQL
+const [result] = await pool.query('INSERT INTO...');
+const insertId = result.insertId;
+
+// PostgreSQL (with RETURNING)
+const { rows } = await pool.query('INSERT INTO... RETURNING id');
+const insertId = rows[0].id;
+```
+
+### Step 5: Test Locally (Optional)
+
+Before deploying to Render, test locally with PostgreSQL:
+
+1. Install PostgreSQL locally
+2. Create database: `createdb hr_database`
+3. Run converted schema: `psql hr_database < schema_postgres.sql`
+4. Update `.env`: `DB_PORT=5432`
+5. Test backend: `npm start`
+
+### Step 6: Deploy to Render
+
+Once converted, use the render.yaml blueprint or manual deployment as described above.
 
 ---
 
