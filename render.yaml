@@ -1,5 +1,7 @@
 services:
   # Backend Web Service
+  # Note: This is configured for PostgreSQL by default (Render's recommended free tier)
+  # If using MySQL, change DB_PORT to 3306 and deploy MySQL via Docker (see database/Dockerfile)
   - type: web
     name: hr-backend
     runtime: node
@@ -24,7 +26,7 @@ services:
       - key: DB_NAME
         value: hr_database
       - key: DB_PORT
-        value: 5432
+        value: 5432  # PostgreSQL default. Use 3306 for MySQL
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
@@ -45,6 +47,10 @@ services:
         sync: false
 
 databases:
+  # PostgreSQL Database (Recommended for Render free tier)
+  # Note: The application currently uses MySQL syntax in schema.sql and seed.sql
+  # For PostgreSQL: Convert SQL files to PostgreSQL syntax (see DEPLOYMENT.md)
+  # For MySQL: Use Docker deployment (see database/Dockerfile)
   - name: hr-postgres-db
     databaseName: hr_database
     plan: free

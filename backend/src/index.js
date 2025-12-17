@@ -20,7 +20,8 @@ const corsOptions = {
         process.env.FRONTEND_URL
       ].filter(Boolean);
       
-      if (allowedOrigins.some(allowed => origin === allowed || origin.startsWith(allowed))) {
+      // Use exact match for security
+      if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));

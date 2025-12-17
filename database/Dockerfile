@@ -1,5 +1,10 @@
 FROM mysql:8.0
 
+# MySQL Docker Container for Render Deployment
+# Note: Render's free tier recommends PostgreSQL. This Dockerfile is for MySQL deployment.
+# For PostgreSQL deployment, convert schema.sql and seed.sql to PostgreSQL syntax.
+# See DEPLOYMENT.md for detailed instructions.
+
 # Set environment variables with defaults
 # These can be overridden when running the container
 ENV MYSQL_DATABASE=${MYSQL_DATABASE:-hr_database}
