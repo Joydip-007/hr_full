@@ -1,4 +1,5 @@
 const mysql = require('mysql2/promise');
+require('dotenv').config();
 
 // Database configuration with SSL support for production
 const dbConfig = {

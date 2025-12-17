@@ -1,7 +1,8 @@
 FROM mysql:8.0
 
-# Set environment variables
-ENV MYSQL_DATABASE=hr_database
+# Set environment variables with defaults
+# These can be overridden when running the container
+ENV MYSQL_DATABASE=${MYSQL_DATABASE:-hr_database}
 ENV MYSQL_ROOT_HOST=%
 
 # Copy initialization scripts

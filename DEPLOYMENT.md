@@ -654,7 +654,7 @@ CORS error - Check FRONTEND_URL
 ### HR Database Application
 - Main README: [README.md](README.md)
 - Production Checklist: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
-- GitHub Repository: https://github.com/Joydip-007/hr_full
+- GitHub Repository: [Your Repository URL]
 
 ### Support
 - Render Community: https://community.render.com

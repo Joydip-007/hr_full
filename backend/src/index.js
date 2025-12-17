@@ -17,11 +17,10 @@ const corsOptions = {
     // In production, check against FRONTEND_URL
     if (process.env.NODE_ENV === 'production') {
       const allowedOrigins = [
-        process.env.FRONTEND_URL,
-        process.env.FRONTEND_URL?.replace('https://', 'http://') // Allow both http and https
+        process.env.FRONTEND_URL
       ].filter(Boolean);
       
-      if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      if (allowedOrigins.some(allowed => origin === allowed || origin.startsWith(allowed))) {
         callback(null, true);
       } else {
         callback(new Error('Not allowed by CORS'));
