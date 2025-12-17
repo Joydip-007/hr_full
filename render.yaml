@@ -28,7 +28,7 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
+        sync: false  # Update with actual frontend URL after deployment
 
   # Frontend Static Site - region field not supported for static sites
   - type: web
@@ -41,7 +41,7 @@ services:
     staticPublishPath: build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://hr-backend.onrender.com
+        value: https://hr-backend.onrender.com  # Update with actual backend URL after deployment
 
 databases:
   - name: hr-database
