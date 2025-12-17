@@ -7,7 +7,8 @@ A comprehensive HR/Job Recruitment Database Management System with full-stack im
 ```
 hr_full/
 ├── database/
-│   └── schema.sql          # MySQL database schema with sample data
+│   ├── schema.sql          # MySQL database schema with sample data
+│   └── seed.sql            # Essential seed data for populating the database
 ├── backend/
 │   ├── src/
 │   │   ├── config/         # Database configuration
@@ -59,10 +60,17 @@ The database includes the following entities:
 ### Database Setup
 
 1. Start MySQL server
-2. Run the schema file:
+2. Run the schema file to create the database structure:
 ```bash
 mysql -u root -p < database/schema.sql
 ```
+
+3. (Optional) Run the seed file to populate with sample data:
+```bash
+mysql -u root -p < database/seed.sql
+```
+
+**Note:** The `schema.sql` file includes sample data by default. Use `seed.sql` separately if you want to reset the data without recreating the schema.
 
 ### Backend Setup
 
