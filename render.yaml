@@ -29,9 +29,9 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-  # Frontend Static Site - NO plan field needed
-  - type: static
-    name: hr-frontend
+# Frontend Static Site - defined in staticSites section
+staticSites:
+  - name: hr-frontend
     branch: main
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/build
