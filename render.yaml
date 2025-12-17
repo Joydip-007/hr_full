@@ -6,9 +6,8 @@ services:
     region: oregon
     plan: free
     branch: main
-    rootDir: backend
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
     healthCheckPath: /health
     envVars:
       - key: PORT
@@ -28,21 +27,17 @@ services:
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false  # Update with actual frontend URL after deployment
+        sync: false
 
-  # Frontend Static Site - use 'starter' plan instead of 'free'
-  - type: web
+  # Frontend Static Site - NO plan field needed
+  - type: static
     name: hr-frontend
-    runtime: static
     branch: main
-    rootDir: frontend
-    buildCommand: npm install && npm run build
-    staticPublishPath: build
-    # Static sites use 'starter' plan (which is free)
-    plan: starter
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://hr-backend.onrender.com  # Update with actual backend URL after deployment
+        value: https://hr-backend.onrender.com
 
 databases:
   - name: hr-database
