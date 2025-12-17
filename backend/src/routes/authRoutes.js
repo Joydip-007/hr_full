@@ -28,12 +28,24 @@ const registerLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiter for API requests
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // limit each IP to 60 requests per minute
+  message: { 
+    success: false, 
+    error: 'Too many requests, please try again later' 
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // Public routes with rate limiting
 router.post('/register', registerLimiter, authController.register);
 router.post('/login', authLimiter, authController.login);
 router.post('/admin/login', authLimiter, authController.adminLogin);
 
-// Protected routes
-router.get('/profile', authenticate, authController.getProfile);
+// Protected routes with rate limiting
+router.get('/profile', apiLimiter, authenticate, authController.getProfile);
 
 module.exports = router;
