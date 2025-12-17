@@ -1,26 +1,5 @@
-# Render.com Blueprint for HR Database Application
-# 
-# ⚠️ IMPORTANT: DATABASE CONFIGURATION REQUIRED
-# This blueprint uses PostgreSQL (Render's free tier database) but the application
-# currently uses MySQL. Before deploying, you must:
-# 
-# Option 1 (Recommended): Convert to PostgreSQL
-#   1. Install pg package: Add "pg": "^8.11.0" to backend/package.json dependencies
-#   2. Update backend/src/config/database.js to use pg instead of mysql2
-#   3. Convert database/schema.sql to PostgreSQL syntax
-#   4. Convert database/seed.sql to PostgreSQL syntax
-#   See DEPLOYMENT.md for detailed migration guide
-# 
-# Option 2: Use MySQL (requires paid tier or custom Docker service)
-#   1. Remove the databases section below
-#   2. Deploy MySQL separately using database/Dockerfile
-#   3. Update DB_PORT env var to 3306
-# 
-# For detailed instructions, see DEPLOYMENT.md
-
 services:
   # Backend Web Service
-  # Note: Configured for PostgreSQL by default. See note above for MySQL.
   - type: web
     name: hr-backend
     runtime: node
@@ -45,17 +24,16 @@ services:
       - key: DB_NAME
         value: hr_database
       - key: DB_PORT
-        value: 5432  # PostgreSQL default. Use 3306 for MySQL
+        value: 5432
       - key: JWT_SECRET
         generateValue: true
       - key: FRONTEND_URL
-        sync: false
+        sync: false  # Update with actual frontend URL after deployment
 
-  # Frontend Static Site
+  # Frontend Static Site - region field not supported for static sites
   - type: web
     name: hr-frontend
     runtime: static
-    region: oregon
     plan: free
     branch: main
     rootDir: frontend
@@ -63,14 +41,11 @@ services:
     staticPublishPath: build
     envVars:
       - key: REACT_APP_API_URL
-        sync: false
+        value: https://hr-backend.onrender.com  # Update with actual backend URL after deployment
 
 databases:
-  # PostgreSQL Database (Recommended for Render free tier)
-  # Note: The application currently uses MySQL syntax in schema.sql and seed.sql
-  # For PostgreSQL: Convert SQL files to PostgreSQL syntax (see DEPLOYMENT.md)
-  # For MySQL: Use Docker deployment (see database/Dockerfile)
-  - name: hr-postgres-db
-    databaseName: hr_database
+  - name: hr-database
     plan: free
     region: oregon
+    databaseName: hr_database
+    user: hr_user

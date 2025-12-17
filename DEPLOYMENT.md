@@ -1,886 +1,349 @@
-# HR Database Deployment Guide for Render.com
+# Render.com Deployment Guide - HR Database Application
 
-Complete guide to deploying the HR Database application on Render.com with the latest 2024 UI.
+## ⚠️ Important: Use PostgreSQL Instead of MySQL
 
-## ⚠️ Important: Database Configuration
-
-**This application currently uses MySQL** with MySQL-specific syntax in `schema.sql` and `seed.sql`. However, **Render's free tier only supports PostgreSQL**.
-
-**You have two options:**
-
-1. **PostgreSQL (Recommended for Render Free Tier)**:
-   - Convert `database/schema.sql` and `database/seed.sql` to PostgreSQL syntax
-   - Install `pg` package in backend: `npm install pg`
-   - Update database configuration to use `pg` instead of `mysql2`
-   - See [PostgreSQL Migration Guide](#postgresql-migration) below
-
-2. **MySQL (Requires Paid Tier or Alternative)**:
-   - Deploy MySQL via Docker on Render (requires paid tier)
-   - Use the provided `database/Dockerfile`
-   - Update `render.yaml` to use MySQL service instead of PostgreSQL
-
-**For quick start with free tier**: Follow the PostgreSQL option.
-
-## Table of Contents
-1. [Introduction](#introduction)
-2. [Prerequisites](#prerequisites)
-3. [Option 1: One-Click Blueprint Deployment](#option-1-one-click-blueprint-deployment-recommended)
-4. [Option 2: Manual Deployment](#option-2-manual-deployment)
-5. [Database Setup](#database-setup)
-6. [Environment Variables Reference](#environment-variables-reference)
-7. [Troubleshooting Guide](#troubleshooting-guide)
-8. [Render UI Guide (2024)](#render-ui-guide-2024)
-9. [Free Tier Limitations](#free-tier-limitations)
-10. [Production Checklist](#production-checklist)
-11. [Monitoring and Maintenance](#monitoring-and-maintenance)
-
----
-
-## Introduction
-
-This application consists of three main components:
-- **Backend API**: Node.js/Express web service
-- **Frontend**: React static site
-- **Database**: PostgreSQL (recommended for Render) or MySQL
-
-Render.com offers two deployment methods:
-1. **Blueprint (render.yaml)**: One-click deployment of all services
-2. **Manual**: Create each service separately with full control
-
----
+Render's free tier **only supports PostgreSQL**, not MySQL. We need to adapt the database schema.
 
 ## Prerequisites
-
-Before you begin, ensure you have:
-
-- ✅ A GitHub account with this repository forked/cloned
-- ✅ A Render.com account (free tier available at https://render.com)
-- ✅ Git repository connected to Render
-- ✅ Basic understanding of environment variables
-
-### Important Notes
-
-- **Database Choice**: Render's free tier PostgreSQL is recommended. MySQL requires Docker which has limitations on free tier.
-- **Cold Starts**: Free tier services spin down after 15 minutes of inactivity. First request after inactivity may take 30-60 seconds.
-- **Build Time**: Initial deployment takes 5-10 minutes for all services.
+- GitHub account with access to `Joydip-007/hr_full`
+- Render.com account (sign up at https://render.com)
 
 ---
 
-## Option 1: One-Click Blueprint Deployment (Recommended)
+## 🚀 Deployment Options
 
-The `render.yaml` file in the repository root enables automatic deployment of all services.
+### Option A: Blueprint Deploy (Recommended - One Click)
 
-### Step 1: Access Render Dashboard
+1. **Push the render.yaml file to your repository**
+2. Go to [Render Dashboard](https://render.com/dashboard)
+3. Click **"New +"** button (top right)
+4. Select **"Blueprint"**
+5. Connect to repository: `Joydip-007/hr_full`
+6. Render will read `render.yaml` and create all services automatically
+7. Fill in the required environment variables:
+   - `DB_HOST`: (will be auto-filled from database)
+   - `DB_USER`: (will be auto-filled from database)
+   - `DB_PASSWORD`: (will be auto-filled from database)
+   - `FRONTEND_URL`: (add after frontend is deployed)
+8. Click **"Apply"**
 
-1. Go to https://render.com and log in
-2. Click the **"New +"** button in the top right corner
-3. Select **"Blueprint"** from the dropdown menu
-
-### Step 2: Connect Repository
-
-1. If this is your first time:
-   - Click **"Connect GitHub"** or **"Connect GitLab"**
-   - Authorize Render to access your repositories
-   - Select the organization/account
-2. Find and select your **hr_full** repository
-3. Render will automatically detect the `render.yaml` file
-
-### Step 3: Configure Blueprint
-
-1. Review the services that will be created:
-   - `hr-backend` (Web Service)
-   - `hr-frontend` (Static Site)
-   - `hr-postgres-db` (PostgreSQL Database)
-
-2. **Set Required Environment Variables**:
-   
-   The blueprint will prompt you for values marked with `sync: false`:
-   
-   **For hr-backend:**
-   - `DB_HOST`: Will be auto-populated after database creation
-     - Format: `dpg-xxxxx-a.oregon-postgres.render.com`
-     - Or use: `hr-postgres-db` (internal hostname)
-   - `DB_USER`: Will be auto-populated (usually `hr_postgres_db_user`)
-   - `DB_PASSWORD`: Will be auto-generated by Render
-   - `FRONTEND_URL`: Will be your frontend URL
-     - Format: `https://hr-frontend.onrender.com`
-     - Update this after frontend deploys
-   
-   **For hr-frontend:**
-   - `REACT_APP_API_URL`: Will be your backend URL
-     - Format: `https://hr-backend.onrender.com`
-     - Update this after backend deploys
-
-3. Click **"Apply"** to start deployment
-
-### Step 4: Monitor Deployment
-
-1. Render will create all three services simultaneously
-2. Database typically completes first (2-3 minutes)
-3. Backend and frontend follow (5-10 minutes each)
-4. Watch the logs in each service's dashboard
-
-### Step 5: Update Environment Variables
-
-After all services are deployed:
-
-1. Go to **hr-backend** service
-2. Click **"Environment"** in the left sidebar
-3. Update `FRONTEND_URL` with the actual frontend URL
-4. Update `DB_HOST` if using internal hostname: `hr-postgres-db`
-5. Click **"Save Changes"** - service will redeploy
-
-6. Go to **hr-frontend** service
-7. Click **"Environment"**
-8. Update `REACT_APP_API_URL` with the actual backend URL
-9. Click **"Save Changes"** - service will redeploy
-
-### Step 6: Initialize Database
-
-See [Database Setup](#database-setup) section below.
+**Note:** You'll need to update FRONTEND_URL after deployment completes.
 
 ---
 
-## Option 2: Manual Deployment
+### Option B: Manual Deploy (Step-by-Step Control)
 
-For more control, create each service separately.
-
-### Step 1: Create PostgreSQL Database
+## Step 1: Create PostgreSQL Database
 
 1. From Render Dashboard, click **"New +"** → **"PostgreSQL"**
 2. Configure:
-   - **Name**: `hr-postgres-db`
-   - **Database**: `hr_database`
-   - **User**: Auto-generated (e.g., `hr_postgres_db_user`)
-   - **Region**: `Oregon (US West)`
-   - **Plan**: `Free`
+   ```
+   Name: hr-database
+   Database: hr_database
+   User: hr_user (auto-generated)
+   Region: Oregon (or closest to you)
+   Plan: Free
+   ```
 3. Click **"Create Database"**
-4. Wait for status to show **"Available"** (~2-3 minutes)
-5. **Save these values** (found in "Info" tab):
-   - Internal Database URL
+4. Wait for database to be created (~2 minutes)
+5. **Copy Connection Details** from the Info tab:
+   - **Internal Database URL** (use this for backend)
    - External Database URL
-   - Hostname
-   - Port
-   - Database name
-   - Username
-   - Password
+   - Host, Port, Database, Username, Password
 
-### Step 2: Deploy Backend Web Service
+### Step 2: Convert MySQL Schema to PostgreSQL
+
+Since Render only supports PostgreSQL on free tier, you need to convert your MySQL schema.
+
+**Key MySQL to PostgreSQL Changes:**
+```sql
+-- MySQL: AUTO_INCREMENT
+-- PostgreSQL: SERIAL or GENERATED ALWAYS AS IDENTITY
+
+-- Before (MySQL):
+LocationID INT AUTO_INCREMENT PRIMARY KEY
+
+-- After (PostgreSQL):
+LocationID SERIAL PRIMARY KEY
+-- OR
+LocationID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
+
+-- MySQL: VARCHAR
+-- PostgreSQL: VARCHAR (same, but check constraints)
+
+-- MySQL: DATETIME
+-- PostgreSQL: TIMESTAMP
+
+-- MySQL: TINYINT(1) for boolean
+-- PostgreSQL: BOOLEAN
+```
+
+**Quick conversion script** (save as `database/schema_postgres.sql`):
+- Replace `INT AUTO_INCREMENT` with `SERIAL`
+- Replace `DATETIME` with `TIMESTAMP`
+- Replace `TINYINT(1)` with `BOOLEAN`
+- Replace backticks `` ` `` with double quotes `"`
+- Replace `ENGINE=InnoDB` with nothing
+
+### Step 3: Initialize Database
+
+**Method 1: Using Render Shell (Recommended)**
+1. In PostgreSQL database dashboard, click **"Connect"** dropdown
+2. Copy the **"PSQL Command"**
+3. Use a local terminal with PostgreSQL client:
+   ```bash
+   # Install psql if needed (Mac)
+   brew install postgresql
+   
+   # Connect to database
+   psql <paste-connection-string-here>
+   
+   # Run schema
+   \i database/schema_postgres.sql
+   
+   # Run seeds
+   \i database/seed.sql
+   ```
+
+**Method 2: Using Web Interface**
+1. Click **"Connect"** → **"External Connection"**
+2. Use a PostgreSQL GUI tool like pgAdmin, DBeaver, or TablePlus
+3. Connect using the credentials
+4. Execute the SQL files
+
+## Step 4: Deploy Backend
 
 1. Click **"New +"** → **"Web Service"**
-2. Connect your repository
-3. Configure:
-   - **Name**: `hr-backend`
-   - **Region**: `Oregon (US West)`
-   - **Branch**: `main`
-   - **Root Directory**: `backend`
-   - **Runtime**: `Node`
-   - **Build Command**: `npm install`
-   - **Start Command**: `npm start`
-   - **Plan**: `Free`
+2. Select **"Build and deploy from a Git repository"**
+3. Connect to `Joydip-007/hr_full`
+4. Configure:
+   ```
+   Name: hr-backend
+   Region: Oregon (same as database)
+   Branch: main
+   Root Directory: backend
+   Runtime: Node
+   Build Command: npm install
+   Start Command: npm start
+   ```
 
-4. Add Environment Variables (click "Advanced" → "Add Environment Variable"):
+5. **Click "Advanced"** and add environment variables:
    ```
    PORT=5000
    NODE_ENV=production
-   DB_HOST=<from database info - hostname>
-   DB_USER=<from database info - username>
-   DB_PASSWORD=<from database info - password>
+   DB_HOST=<from database Internal Connection - host only>
+   DB_USER=<from database>
+   DB_PASSWORD=<from database>
    DB_NAME=hr_database
    DB_PORT=5432
-   DB_SSL=true
-   JWT_SECRET=<generate a strong random string>
-   FRONTEND_URL=<will add after frontend deploys>
+   JWT_SECRET=<click "Generate" or create random 32-char string>
+   FRONTEND_URL=https://hr-frontend.onrender.com
    ```
 
-   **To generate JWT_SECRET**, use:
-   ```bash
-   node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-   ```
-   Or use an online generator: https://randomkeygen.com/
+   **To get database values:**
+   - Go to your PostgreSQL database dashboard
+   - Click on "Info" or "Connect" tab
+   - Use **Internal Database URL** values:
+     ```
+     postgres://username:password@host:port/database
+     ```
+   - Extract: host, username, password, database name
 
-5. Configure Health Check:
-   - **Health Check Path**: `/health`
+6. Select **Plan: Free**
+7. Click **"Create Web Service"**
+8. Wait for deployment (~5-10 minutes first time)
+9. **Copy your backend URL**: `https://hr-backend-XXXX.onrender.com`
 
-6. Click **"Create Web Service"**
-7. Save the deployed URL (e.g., `https://hr-backend.onrender.com`)
-
-### Step 3: Deploy Frontend Static Site
+## Step 5: Deploy Frontend
 
 1. Click **"New +"** → **"Static Site"**
-2. Connect your repository
-3. Configure:
-   - **Name**: `hr-frontend`
-   - **Region**: `Oregon (US West)`
-   - **Branch**: `main`
-   - **Root Directory**: `frontend`
-   - **Build Command**: `npm install && npm run build`
-   - **Publish Directory**: `build`
-
-4. Add Environment Variable:
+2. Select **"Build and deploy from a Git repository"**
+3. Connect to `Joydip-007/hr_full`
+4. Configure:
    ```
-   REACT_APP_API_URL=<your backend URL from Step 2>
+   Name: hr-frontend
+   Branch: main
+   Root Directory: frontend
+   Build Command: npm install && npm run build
+   Publish Directory: build
    ```
-   Example: `https://hr-backend.onrender.com`
 
-5. Click **"Create Static Site"**
-6. Save the deployed URL (e.g., `https://hr-frontend.onrender.com`)
+5. **Add environment variable:**
+   ```
+   REACT_APP_API_URL=<backend-url-from-step-4>
+   ```
+   Example: `REACT_APP_API_URL=https://hr-backend-abc123.onrender.com`
 
-### Step 4: Update Backend CORS
+6. Select **Plan: Free**
+7. Click **"Create Static Site"**
+8. Wait for deployment (~3-5 minutes)
+9. **Copy your frontend URL**: `https://hr-frontend-XXXX.onrender.com`
+
+## Step 6: Update Backend CORS
 
 1. Go back to **hr-backend** service
-2. Click **"Environment"** in left sidebar
-3. Add/Update:
+2. Click **"Environment"** tab
+3. Update or add:
    ```
-   FRONTEND_URL=<your frontend URL from Step 3>
+   FRONTEND_URL=<frontend-url-from-step-5>
    ```
-   Example: `https://hr-frontend.onrender.com`
+   Example: `FRONTEND_URL=https://hr-frontend-abc123.onrender.com`
 
 4. Click **"Save Changes"**
-5. Backend will automatically redeploy (~2-3 minutes)
+5. Backend will automatically redeploy
 
 ---
 
-## Database Setup
+## 🧪 Testing Your Deployment
 
-After database is created and backend is deployed, initialize the schema and data.
+1. Visit your frontend URL
+2. You should see the HR Database application
+3. Test login with default credentials:
+   ```
+   Admin:
+   - Email: admin@hrdb.com
+   - Password: password123
+   
+   Regular Users:
+   - john.smith@email.com / password123
+   - emily.johnson@email.com / password123
+   - michael.williams@email.com / password123
+   ```
 
-### Method 1: Using Render Shell (Recommended)
+4. Test features:
+   - Browse positions
+   - Apply to jobs
+   - View applications
+   - Admin dashboard (with admin account)
 
-1. Go to your **hr-postgres-db** database in Render Dashboard
-2. Click **"Shell"** tab (on the right side of the page)
-3. Wait for shell to connect
-4. You're now in the PostgreSQL prompt
+---
 
-**Note**: The schema and seed files are written for MySQL. You'll need to convert them for PostgreSQL or use MySQL with Docker.
+## 🐛 Troubleshooting
 
-#### For PostgreSQL (Conversion Required)
+### Backend Fails to Start
+**Check Logs:**
+1. Go to backend service dashboard
+2. Click **"Logs"** tab
+3. Look for errors
 
-The existing `schema.sql` and `seed.sql` are MySQL-specific. Main differences:
-- PostgreSQL uses `SERIAL` instead of `AUTO_INCREMENT`
-- PostgreSQL uses `TEXT` instead of `VARCHAR` for long strings
-- Some date/time functions differ
+**Common issues:**
+- ❌ Database connection failed → Check DB credentials
+- ❌ Module not found → Check build command ran successfully
+- ❌ Port already in use → Render handles this, shouldn't happen
 
-**Quick PostgreSQL Schema** (simplified example):
-```sql
--- Create tables with PostgreSQL syntax
-CREATE TABLE Location (
-    location_id SERIAL PRIMARY KEY,
-    city VARCHAR(100) NOT NULL,
-    state VARCHAR(100) NOT NULL,
-    country VARCHAR(100) NOT NULL,
-    address TEXT
-);
+### Frontend Can't Connect to Backend
+**Check:**
+- ✅ `REACT_APP_API_URL` is set correctly (without trailing slash)
+- ✅ Backend is running (green status)
+- ✅ CORS is configured with correct frontend URL
+- ✅ Check browser console for errors (F12)
 
--- Continue with other tables...
+### Database Connection Errors
+**Common fixes:**
+- Use **Internal Database URL** for backend (not external)
+- Verify all DB credentials are copied correctly
+- Check database is running (green status)
+- Ensure DB_PORT is `5432` (PostgreSQL default)
+
+### Service Spins Down (Free Tier)
+- Free tier services sleep after 15 minutes of inactivity
+- First request takes 30-60 seconds to wake up
+- Consider upgrading to paid plan ($7/month per service) for always-on
+
+### Build Failures
+**Frontend build fails:**
+```bash
+# Check node version compatibility
+# Render uses Node 14 by default
 ```
-
-#### Using MySQL with Docker (Alternative)
-
-If you prefer MySQL, you can deploy a MySQL instance using the provided Dockerfile:
-
-1. Create a new **Web Service** on Render
-2. Use **Docker** runtime instead of Node
-3. Point to `database/Dockerfile`
-4. Set environment variables:
-   ```
-   MYSQL_ROOT_PASSWORD=<strong-password>
-   MYSQL_DATABASE=hr_database
-   ```
-5. Expose internal port: `3306`
-
-Then update backend `DB_HOST` to point to this MySQL service.
-
-### Method 2: Using Local MySQL Client
-
-If you have MySQL locally and want to populate a remote database:
-
-1. Get the external database URL from Render
-2. Install MySQL client locally
-3. Run:
-   ```bash
-   mysql -h <hostname> -P <port> -u <username> -p<password> hr_database < database/schema.sql
-   mysql -h <hostname> -P <port> -u <username> -p<password> hr_database < database/seed.sql
-   ```
-
-### Method 3: Using pgAdmin or DBeaver
-
-1. Download pgAdmin (PostgreSQL) or DBeaver (multi-database)
-2. Create new connection using database credentials from Render
-3. Open SQL editor
-4. Copy contents of `schema.sql` (converted to PostgreSQL)
-5. Execute
-6. Repeat with `seed.sql`
-
-### Verify Database
-
-After running schema and seed files:
-
-1. Check backend logs: Should see "✓ Database connected successfully"
-2. Test API endpoint: `https://your-backend.onrender.com/health`
-3. Test data endpoint: `https://your-backend.onrender.com/api/locations`
-
----
-
-## PostgreSQL Migration
-
-This section provides detailed guidance for converting the MySQL application to PostgreSQL for Render's free tier.
-
-### Step 1: Update Backend Dependencies
-
-Update `backend/package.json`:
-
+Add to `frontend/package.json`:
 ```json
-{
-  "dependencies": {
-    "pg": "^8.11.0",  // Add this line
-    "mysql2": "^3.6.5"  // Can remove if only using PostgreSQL
-  }
+"engines": {
+  "node": ">=18.x"
 }
 ```
 
-### Step 2: Update Database Configuration
+**Backend build fails:**
+Check `backend/package.json` has all dependencies listed.
 
-Update `backend/src/config/database.js` to support both databases or switch to PostgreSQL:
+---
 
-**Option A: PostgreSQL Only**
-```javascript
-const { Pool } = require('pg');
-require('dotenv').config();
+## 📊 Free Tier Limitations
 
-const dbConfig = {
-  host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || 'hr_database',
-  port: process.env.DB_PORT || 5432,
-  max: 10,
-  connectionTimeoutMillis: 60000,
-  idleTimeoutMillis: 60000
-};
+| Resource | Limit |
+|----------|-------|
+| **Web Services** | 750 hours/month per service |
+| **Static Sites** | Unlimited |
+| **PostgreSQL** | 90 days, then expires (1GB storage) |
+| **Bandwidth** | 100GB/month |
+| **Build minutes** | 500 minutes/month |
+| **Spin down** | After 15 min inactivity |
 
-// Add SSL for production
-if (process.env.NODE_ENV === 'production' && process.env.DB_SSL !== 'false') {
-  dbConfig.ssl = {
-    rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED === 'true'
-  };
-}
+**Cost to keep always-on:**
+- Web Service: $7/month
+- PostgreSQL: $7/month
+- **Total: ~$14/month**
 
-const pool = new Pool(dbConfig);
+---
 
-const testConnection = async () => {
-  try {
-    const client = await pool.connect();
-    console.log('✓ Database connected successfully');
-    console.log(`✓ Connected to: ${dbConfig.host}:${dbConfig.port}/${dbConfig.database}`);
-    client.release();
-    return true;
-  } catch (error) {
-    console.error('✗ Database connection failed:', error.message);
-    console.error('✗ Please check your database configuration');
-    return false;
-  }
-};
+## 🔒 Security Recommendations
 
-module.exports = { pool, testConnection };
+### Before going live:
+1. ✅ Change all default passwords in database
+2. ✅ Generate strong JWT_SECRET (32+ characters)
+3. ✅ Set specific CORS origin (not `*`)
+4. ✅ Enable HTTPS only (Render does this by default)
+5. ✅ Review database permissions
+6. ✅ Add rate limiting to API endpoints
+7. ✅ Validate all user inputs
+
+---
+
+## 📚 Additional Resources
+
+- [Render Documentation](https://render.com/docs)
+- [PostgreSQL on Render](https://render.com/docs/databases)
+- [Node.js on Render](https://render.com/docs/deploy-node-express-app)
+- [React on Render](https://render.com/docs/deploy-create-react-app)
+- [Environment Variables](https://render.com/docs/environment-variables)
+
+---
+
+## 🆘 Getting Help
+
+- **Render Community**: https://community.render.com
+- **Render Status**: https://status.render.com
+- **Support**: help@render.com (paid plans only)
+
+---
+
+## ✅ Deployment Checklist
+
+- [ ] PostgreSQL database created
+- [ ] Database schema converted to PostgreSQL
+- [ ] Database initialized with schema and seed data
+- [ ] Backend deployed with all environment variables
+- [ ] Backend health check passing (`/health`)
+- [ ] Frontend deployed with `REACT_APP_API_URL`
+- [ ] Backend CORS updated with frontend URL
+- [ ] Test login with default credentials
+- [ ] Test job application flow
+- [ ] Test admin dashboard
+- [ ] Change default passwords
+- [ ] Document your service URLs
+
+---
+
+## 📝 Your Deployment URLs
+
+Fill these in after deployment:
+
+```
+Backend URL: ________________________________
+Frontend URL: ________________________________
+Database Host: ________________________________
+
+Admin Login: admin@hrdb.com
 ```
 
-### Step 3: Convert SQL Files
-
-**Key MySQL to PostgreSQL Conversions:**
-
-1. **AUTO_INCREMENT → SERIAL**
-   ```sql
-   -- MySQL
-   location_id INT AUTO_INCREMENT PRIMARY KEY
-   
-   -- PostgreSQL
-   location_id SERIAL PRIMARY KEY
-   ```
-
-2. **DATETIME → TIMESTAMP**
-   ```sql
-   -- MySQL
-   applied_date DATETIME
-   
-   -- PostgreSQL
-   applied_date TIMESTAMP
-   ```
-
-3. **VARCHAR lengths (optional)**
-   ```sql
-   -- MySQL
-   email VARCHAR(255)
-   
-   -- PostgreSQL (same or use TEXT)
-   email VARCHAR(255)  -- or TEXT
-   ```
-
-4. **NOW() function (same in both)**
-   ```sql
-   -- Works in both
-   applied_date TIMESTAMP DEFAULT NOW()
-   ```
-
-5. **Foreign Key syntax (mostly same)**
-   ```sql
-   -- Both MySQL and PostgreSQL
-   FOREIGN KEY (company_id) REFERENCES Company(company_id)
-   ```
-
-**Example Converted Table:**
-```sql
--- PostgreSQL version
-CREATE TABLE Location (
-    location_id SERIAL PRIMARY KEY,
-    city VARCHAR(100) NOT NULL,
-    state VARCHAR(100) NOT NULL,
-    country VARCHAR(100) NOT NULL,
-    address TEXT
-);
-
-CREATE TABLE Company (
-    company_id SERIAL PRIMARY KEY,
-    name VARCHAR(255) NOT NULL UNIQUE,
-    num_employees INT,
-    rating DECIMAL(3,2),
-    location_id INT,
-    FOREIGN KEY (location_id) REFERENCES Location(location_id) ON DELETE SET NULL
-);
-
--- Continue with other tables...
-```
-
-### Step 4: Update Query Syntax (if needed)
-
-Most queries work the same, but check for:
-
-**Parameterized Queries:**
-```javascript
-// MySQL (uses ?)
-const [rows] = await pool.query('SELECT * FROM users WHERE id = ?', [userId]);
-
-// PostgreSQL (uses $1, $2, etc.)
-const { rows } = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
-```
-
-**Return Values:**
-```javascript
-// MySQL
-const [result] = await pool.query('INSERT INTO...');
-const insertId = result.insertId;
-
-// PostgreSQL (with RETURNING)
-const { rows } = await pool.query('INSERT INTO... RETURNING id');
-const insertId = rows[0].id;
-```
-
-### Step 5: Test Locally (Optional)
-
-Before deploying to Render, test locally with PostgreSQL:
-
-1. Install PostgreSQL locally
-2. Create database: `createdb hr_database`
-3. Run converted schema: `psql hr_database < schema_postgres.sql`
-4. Update `.env`: `DB_PORT=5432`
-5. Test backend: `npm start`
-
-### Step 6: Deploy to Render
-
-Once converted, use the render.yaml blueprint or manual deployment as described above.
-
----
-
-## Environment Variables Reference
-
-### Backend Environment Variables
-
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| `PORT` | Server port | `5000` | Yes |
-| `NODE_ENV` | Environment mode | `production` | Yes |
-| `DB_HOST` | Database hostname | `dpg-xxxxx.oregon-postgres.render.com` | Yes |
-| `DB_USER` | Database user | `hr_postgres_db_user` | Yes |
-| `DB_PASSWORD` | Database password | `<auto-generated>` | Yes |
-| `DB_NAME` | Database name | `hr_database` | Yes |
-| `DB_PORT` | Database port | `5432` (PostgreSQL) or `3306` (MySQL) | Yes |
-| `DB_SSL` | Enable SSL for DB | `true` (production), `false` (local) | No |
-| `JWT_SECRET` | Secret for JWT tokens | `<random-64-char-string>` | Yes |
-| `FRONTEND_URL` | Frontend URL for CORS | `https://hr-frontend.onrender.com` | Yes |
-
-### Frontend Environment Variables
-
-| Variable | Description | Example | Required |
-|----------|-------------|---------|----------|
-| `REACT_APP_API_URL` | Backend API URL | `https://hr-backend.onrender.com` | Yes |
-
-**Important**: Frontend env vars must start with `REACT_APP_` to be accessible in React.
-
----
-
-## Troubleshooting Guide
-
-### Common Issues and Solutions
-
-#### 1. Service Won't Start
-
-**Symptoms**: Service status shows "Build failed" or "Deploy failed"
-
-**Solutions**:
-- Check logs in Render dashboard (Click service → "Logs" tab)
-- Verify build command is correct
-- Ensure all dependencies are in `package.json`
-- Check Node version compatibility
-
-#### 2. Database Connection Failed
-
-**Symptoms**: Backend logs show "Database connection failed"
-
-**Solutions**:
-- Verify database is in "Available" status
-- Check all DB environment variables are set correctly
-- Use internal database URL for better reliability
-- Ensure `DB_SSL=true` for production
-- Test connection in database shell
-
-#### 3. CORS Errors
-
-**Symptoms**: Browser console shows "Access-Control-Allow-Origin" errors
-
-**Solutions**:
-- Verify `FRONTEND_URL` in backend matches exact frontend URL
-- Include protocol: `https://` not `http://`
-- Check for trailing slashes (should match)
-- Redeploy backend after changing CORS settings
-
-#### 4. 404 Errors on Frontend Routes
-
-**Symptoms**: Direct navigation to routes like `/positions` returns 404
-
-**Solutions**:
-- Add `_redirects` file in `frontend/public/`:
-  ```
-  /*    /index.html   200
-  ```
-- This ensures React Router handles all routes
-
-#### 5. Environment Variables Not Working
-
-**Symptoms**: App behaves as if env vars are undefined
-
-**Solutions**:
-- Frontend: Ensure vars start with `REACT_APP_`
-- Rebuild service after changing env vars
-- Check for typos in variable names
-- Use `console.log` to debug (remove in production)
-
-#### 6. Slow First Load (Cold Start)
-
-**Symptoms**: First request takes 30-60 seconds
-
-**Solutions**:
-- This is normal for Render free tier
-- Services spin down after 15 minutes of inactivity
-- Consider upgrade to paid tier for always-on services
-- Use a monitoring service to ping periodically (see Maintenance section)
-
-#### 7. Build Timeout
-
-**Symptoms**: "Build exceeded time limit"
-
-**Solutions**:
-- Check for large dependencies
-- Optimize `package.json`
-- Consider using build cache
-- May need paid tier for complex builds
-
-#### 8. Database Connection Timeout
-
-**Symptoms**: "Connection timeout" in logs
-
-**Solutions**:
-- Increase timeout in `database.js`:
-  ```javascript
-  connectTimeout: 60000,
-  acquireTimeout: 60000,
-  ```
-- Check database is in same region as backend
-- Verify network isn't blocked
-
----
-
-## Render UI Guide (2024)
-
-### Dashboard Navigation
-
-**Main Dashboard**:
-- Top bar: "New +" button (blue, right side) - Create new services
-- Left sidebar: 
-  - "Dashboard" - Overview of all services
-  - Your services listed individually
-- Center: Service cards showing status
-
-**Service Details Page**:
-- Top tabs: "Overview", "Logs", "Events", "Metrics"
-- Left sidebar:
-  - "Settings" - General configuration
-  - "Environment" - Environment variables
-  - "Redirects/Rewrites" - URL rules (static sites only)
-  - "Deploys" - Deployment history
-  - "Shell" - Terminal access (databases only)
-
-### Creating Services (2024 UI)
-
-1. **New + Button Location**: Top right, blue button with plus icon
-2. **Service Type Menu**: Dropdown appears with options:
-   - Web Service
-   - Static Site
-   - Private Service
-   - Cron Job
-   - PostgreSQL
-   - Redis
-   - Blueprint
-
-### Managing Environment Variables
-
-1. Click service name from dashboard
-2. Click "Environment" in left sidebar
-3. Two sections:
-   - **Environment Variables**: Key-value pairs
-   - **Secret Files**: For certificate files, etc.
-4. Click "Add Environment Variable" (blue button)
-5. Enter key and value
-6. Click "Save Changes" (triggers redeploy)
-
-### Viewing Logs
-
-1. Click service name
-2. Click "Logs" tab at top
-3. Real-time logs appear
-4. Use search box to filter
-5. Click "Download Logs" for full export
-
-### Database Shell Access
-
-1. Go to database service
-2. Click "Shell" tab (may be on right side)
-3. Wait for connection (~5-10 seconds)
-4. You're now in PostgreSQL/MySQL prompt
-5. Type SQL commands directly
-
-### Manual Deploy/Redeploy
-
-1. Go to service
-2. Click "Manual Deploy" in top right
-3. Select branch
-4. Click "Deploy"
-5. Watch logs for progress
-
----
-
-## Free Tier Limitations
-
-Render's free tier includes:
-
-### Resources
-- **Web Services**: 750 hours/month (shared across all web services)
-- **Bandwidth**: 100 GB/month
-- **Build Minutes**: Unlimited
-- **Databases**: 
-  - PostgreSQL: 1 GB storage, expires after 90 days
-  - No MySQL (use PostgreSQL or paid tier)
-
-### Limitations
-- ⚠️ **Spin Down**: Services sleep after 15 minutes of inactivity
-- ⚠️ **Cold Start**: 30-60 seconds to wake up
-- ⚠️ **Database Expiration**: Free PostgreSQL expires after 90 days
-- ⚠️ **No Custom Domains**: Available on paid plans only
-- ⚠️ **Shared Resources**: Performance varies with load
-
-### Recommendations
-- Use PostgreSQL for database (free tier supported)
-- Keep services in same region for better performance
-- Monitor usage to avoid overages
-- Consider paid tier ($7/month) for production apps
-- Set up database backups before 90-day expiration
-
----
-
-## Production Checklist
-
-Use this checklist before going live. See also: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
-
-### Pre-Deployment
-- [ ] All services created and deployed
-- [ ] Database schema and seed data loaded
-- [ ] All environment variables configured
-- [ ] JWT_SECRET is strong and unique
-- [ ] CORS configured for correct frontend URL
-
-### Post-Deployment Testing
-- [ ] Health check endpoint responds: `/health`
-- [ ] Frontend loads without errors
-- [ ] User registration works
-- [ ] User login works
-- [ ] View positions list
-- [ ] Apply to a position
-- [ ] Admin login works
-- [ ] Admin dashboard accessible
-- [ ] No console errors in browser
-
-### Security
-- [ ] No secrets in code or logs
-- [ ] Environment variables used for all sensitive data
-- [ ] CORS restricted to frontend URL only
-- [ ] JWT_SECRET is cryptographically random
-- [ ] Database password is strong
-
-### Performance
-- [ ] All services show "Live" status
-- [ ] API responses under 2 seconds
-- [ ] Frontend loads under 3 seconds
-- [ ] No timeout errors in logs
-
----
-
-## Monitoring and Maintenance
-
-### Regular Monitoring
-
-**Daily/Weekly**:
-- Check service status in Render dashboard
-- Review logs for errors
-- Monitor database storage usage
-
-**Monthly**:
-- Review bandwidth usage
-- Check for security updates
-- Backup database (before 90-day expiration)
-
-### Keep Services Awake (Optional)
-
-Free tier services spin down after 15 minutes. To keep them awake:
-
-**Option 1: UptimeRobot** (Recommended)
-1. Sign up at https://uptimerobot.com (free)
-2. Create new monitor
-3. Type: HTTP(s)
-4. URL: `https://hr-backend.onrender.com/health`
-5. Monitoring interval: 5 minutes
-6. Sends ping to keep service awake
-
-**Option 2: Cron-job.org**
-1. Sign up at https://cron-job.org (free)
-2. Create new cron job
-3. URL: Your backend health endpoint
-4. Schedule: Every 5-10 minutes
-
-**Note**: This uses more of your free tier hours. Monitor usage to avoid hitting limits.
-
-### Database Backups
-
-**Before 90-day expiration** (free tier limitation):
-
-1. Go to database in Render dashboard
-2. Click "Info" tab
-3. Copy External Database URL
-4. Use `pg_dump` to backup:
-   ```bash
-   pg_dump <external-database-url> > backup.sql
-   ```
-5. Store backup securely
-6. Create new free database and restore if needed
-
-**Automated Backups** (Paid Tier):
-- Available on PostgreSQL paid plans
-- Automatic daily backups
-- Point-in-time recovery
-- Longer retention periods
-
-### Logs and Debugging
-
-**Access Logs**:
-1. Service → Logs tab
-2. Real-time streaming
-3. Filter by log level or text
-4. Download full logs if needed
-
-**Common Log Patterns**:
-```
-✓ Database connected successfully - Good
-✗ Database connection failed - Check env vars
-CORS error - Check FRONTEND_URL
-404 - Check routes
-500 - Check backend logs for stack trace
-```
-
-### Updating the Application
-
-**Deploy New Changes**:
-1. Push changes to GitHub
-2. Render auto-deploys if connected (if auto-deploy enabled)
-3. Or manually trigger deploy in Render dashboard
-4. Watch logs for errors
-5. Test after deployment
-
-**Rolling Back**:
-1. Go to service
-2. Click "Deploys" in left sidebar
-3. Find previous successful deploy
-4. Click "Rollback" button
-
----
-
-## Additional Resources
-
-### Render Documentation
-- Official Docs: https://render.com/docs
-- Service Types: https://render.com/docs/service-types
-- Databases: https://render.com/docs/databases
-- Environment Variables: https://render.com/docs/environment-variables
-
-### HR Database Application
-- Main README: [README.md](README.md)
-- Production Checklist: [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md)
-- GitHub Repository: [Your Repository URL]
-
-### Support
-- Render Community: https://community.render.com
-- Render Status: https://status.render.com
-
----
-
-## Summary
-
-**Quick Setup (Blueprint)**:
-1. Fork repository
-2. Create Render account
-3. New + → Blueprint → Select repo
-4. Configure environment variables
-5. Deploy
-6. Initialize database
-7. Test application
-
-**Manual Setup**:
-1. Create PostgreSQL database
-2. Deploy backend web service
-3. Deploy frontend static site
-4. Connect services with environment variables
-5. Initialize database
-6. Test application
-
-**Next Steps**:
-- Complete [Production Checklist](PRODUCTION_CHECKLIST.md)
-- Set up monitoring
-- Enable auto-deploy from GitHub
-- Consider custom domain (paid tier)
-
----
-
-**Happy Deploying! 🚀**
-
-If you encounter issues not covered in this guide, check:
-1. Service logs in Render dashboard
-2. Browser console (F12) for frontend errors
-3. [Troubleshooting section](#troubleshooting-guide) above
-4. Render community forums
+Good luck with your deployment! 🚀
