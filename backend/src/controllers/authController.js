@@ -1,13 +1,24 @@
 const jwt = require('jsonwebtoken');
 const { User } = require('../models');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'hr-database-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = '24h';
+
+if (!JWT_SECRET) {
+  console.error('WARNING: JWT_SECRET environment variable is not set. Authentication will not work properly in production.');
+}
 
 const authController = {
   // Register a new user
   async register(req, res) {
     try {
+      if (!JWT_SECRET) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Server configuration error: JWT_SECRET not set' 
+        });
+      }
+
       const { email, password, first_name, last_name, city, state, dob, willing_to_move } = req.body;
 
       // Validate required fields
@@ -59,6 +70,13 @@ const authController = {
   // Login user
   async login(req, res) {
     try {
+      if (!JWT_SECRET) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Server configuration error: JWT_SECRET not set' 
+        });
+      }
+
       const { email, password } = req.body;
 
       // Validate required fields
@@ -126,6 +144,13 @@ const authController = {
   // Admin login
   async adminLogin(req, res) {
     try {
+      if (!JWT_SECRET) {
+        return res.status(500).json({ 
+          success: false, 
+          error: 'Server configuration error: JWT_SECRET not set' 
+        });
+      }
+
       const { email, password } = req.body;
 
       // Validate required fields

@@ -1,6 +1,8 @@
 const { pool } = require('../config/database');
 const bcrypt = require('bcrypt');
 
+const SALT_ROUNDS = 10;
+
 class User {
   static async findAll() {
     const [rows] = await pool.query(
@@ -33,8 +35,7 @@ class User {
     const { email, password, first_name, last_name, role, job_seeker_id } = userData;
     
     // Hash the password
-    const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
     
     const [result] = await pool.query(
       `INSERT INTO users (email, password, first_name, last_name, role, job_seeker_id) 
@@ -69,8 +70,7 @@ class User {
       const job_seeker_id = jobSeekerResult.insertId;
       
       // Hash the password
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
       
       // Create the user with linked job_seeker_id
       const [userResult] = await connection.query(

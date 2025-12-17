@@ -303,14 +303,14 @@ INSERT INTO job_applications (application_id, job_seeker_id, position_id, status
 -- USERS (password is 'password123' hashed with bcrypt)
 -- ============================================
 -- Admin user
-INSERT INTO users (user_id, email, password, first_name, last_name, role, job_seeker_id) VALUES 
-(1, 'admin@hrdb.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Admin', 'User', 'admin', NULL);
+INSERT INTO users (email, password, first_name, last_name, role, job_seeker_id) VALUES 
+('admin@hrdb.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Admin', 'User', 'admin', NULL);
 
 -- Sample applicant users (linked to job seekers)
-INSERT INTO users (user_id, email, password, first_name, last_name, role, job_seeker_id) VALUES 
-(2, 'john.smith@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'John', 'Smith', 'applicant', 1),
-(3, 'emily.johnson@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Emily', 'Johnson', 'applicant', 2),
-(4, 'michael.williams@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Michael', 'Williams', 'applicant', 3);
+INSERT INTO users (email, password, first_name, last_name, role, job_seeker_id) VALUES 
+('john.smith@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'John', 'Smith', 'applicant', 1),
+('emily.johnson@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Emily', 'Johnson', 'applicant', 2),
+('michael.williams@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Michael', 'Williams', 'applicant', 3);
 
 -- ============================================
 -- SEED DATA COMPLETE

@@ -29,8 +29,14 @@ export const authService = {
     localStorage.removeItem('user');
   },
   getUser: () => {
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
+    try {
+      const user = localStorage.getItem('user');
+      return user ? JSON.parse(user) : null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      localStorage.removeItem('user');
+      return null;
+    }
   },
   isAuthenticated: () => {
     return !!localStorage.getItem('token');

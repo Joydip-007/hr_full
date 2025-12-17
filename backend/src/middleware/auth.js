@@ -1,9 +1,20 @@
 const jwt = require('jsonwebtoken');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'hr-database-secret-key-change-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+  console.error('WARNING: JWT_SECRET environment variable is not set. Authentication will not work properly in production.');
+}
 
 // Authenticate JWT token
 const authenticate = (req, res, next) => {
+  if (!JWT_SECRET) {
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Server configuration error: JWT_SECRET not set' 
+    });
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader) {
