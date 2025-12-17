@@ -6,6 +6,7 @@ const Requirement = require('./Requirement');
 const JobSeeker = require('./JobSeeker');
 const Employee = require('./Employee');
 const JobApplication = require('./JobApplication');
+const User = require('./User');
 
 module.exports = {
   Location,
@@ -15,5 +16,6 @@ module.exports = {
   Requirement,
   JobSeeker,
   Employee,
-  JobApplication
+  JobApplication,
+  User
 };

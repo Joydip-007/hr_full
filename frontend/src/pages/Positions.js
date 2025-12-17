@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { positionService } from '../services/api';
+import { Link } from 'react-router-dom';
+import { positionService, authService } from '../services/api';
 
 function Positions() {
   const [positions, setPositions] = useState([]);
@@ -31,6 +32,8 @@ function Positions() {
     }).format(salary);
   };
 
+  const isLoggedIn = authService.isAuthenticated();
+
   if (loading) return <div className="loading">Loading positions...</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -40,13 +43,24 @@ function Positions() {
 
       <div className="card-grid">
         {positions.map((position) => (
-          <div key={position.position_id} className="card">
+          <div key={position.position_id} className="card position-card">
             <h3 className="card-title">{position.role}</h3>
             <p className="card-subtitle">{position.company_name}</p>
             <div className="card-content">
               <p><strong>Type:</strong> {position.ft_pte}</p>
               <p><strong>Salary:</strong> {formatSalary(position.salary)}</p>
               <p><strong>Location:</strong> {position.city}, {position.state}</p>
+            </div>
+            <div className="card-actions">
+              {isLoggedIn ? (
+                <Link to={`/apply/${position.position_id}`} className="btn btn-apply">
+                  <span className="plus-icon">+</span> Apply Now
+                </Link>
+              ) : (
+                <Link to="/login" className="btn btn-apply">
+                  <span className="plus-icon">+</span> Login to Apply
+                </Link>
+              )}
             </div>
           </div>
         ))}

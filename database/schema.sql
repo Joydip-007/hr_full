@@ -288,6 +288,22 @@ CREATE TABLE IF NOT EXISTS job_applications (
 );
 
 -- ============================================
+-- USERS TABLE (for authentication)
+-- ============================================
+CREATE TABLE IF NOT EXISTS users (
+    user_id INT PRIMARY KEY AUTO_INCREMENT,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    role ENUM('applicant', 'admin') DEFAULT 'applicant',
+    job_seeker_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (job_seeker_id) REFERENCES job_seekers(job_seeker_id) ON DELETE SET NULL
+);
+
+-- ============================================
 -- INSERT SAMPLE DATA
 -- ============================================
 
@@ -516,3 +532,14 @@ INSERT INTO job_applications (job_seeker_id, position_id, status) VALUES
 (8, 6, 'Interview'),
 (9, 9, 'Offered'),
 (10, 10, 'Applied');
+
+-- Insert Users (password is 'password123' hashed with bcrypt)
+-- Admin user
+INSERT INTO users (email, password, first_name, last_name, role, job_seeker_id) VALUES 
+('admin@hrdb.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Admin', 'User', 'admin', NULL);
+
+-- Sample applicant users (linked to job seekers)
+INSERT INTO users (email, password, first_name, last_name, role, job_seeker_id) VALUES 
+('john.smith@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'John', 'Smith', 'applicant', 1),
+('emily.johnson@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Emily', 'Johnson', 'applicant', 2),
+('michael.williams@email.com', '$2b$10$rIC/zKzqT.1E3YkqJvKjUuV5dC5dJxF5fVxXv5vOvqJKhXKGC1Dxe', 'Michael', 'Williams', 'applicant', 3);

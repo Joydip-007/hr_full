@@ -9,6 +9,7 @@ const requirementRoutes = require('./requirementRoutes');
 const jobSeekerRoutes = require('./jobSeekerRoutes');
 const employeeRoutes = require('./employeeRoutes');
 const jobApplicationRoutes = require('./jobApplicationRoutes');
+const authRoutes = require('./authRoutes');
 
 router.use('/locations', locationRoutes);
 router.use('/companies', companyRoutes);
@@ -18,5 +19,6 @@ router.use('/requirements', requirementRoutes);
 router.use('/job-seekers', jobSeekerRoutes);
 router.use('/employees', employeeRoutes);
 router.use('/applications', jobApplicationRoutes);
+router.use('/auth', authRoutes);
 
 module.exports = router;

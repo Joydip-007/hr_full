@@ -6,6 +6,7 @@ const requirementController = require('./requirementController');
 const jobSeekerController = require('./jobSeekerController');
 const employeeController = require('./employeeController');
 const jobApplicationController = require('./jobApplicationController');
+const authController = require('./authController');
 
 module.exports = {
   locationController,
@@ -15,5 +16,6 @@ module.exports = {
   requirementController,
   jobSeekerController,
   employeeController,
-  jobApplicationController
+  jobApplicationController,
+  authController
 };
