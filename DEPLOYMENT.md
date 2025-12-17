@@ -15,6 +15,12 @@ Render's free tier **only supports PostgreSQL**, not MySQL. We need to adapt the
 ### Option A: Blueprint Deploy (Recommended - One Click)
 
 1. **Push the render.yaml file to your repository**
+
+**Note about Plans:**
+- Web services (backend): Use `free` plan
+- Static sites (frontend): Use `starter` plan (which is free)
+- Databases: Use `free` plan
+
 2. Go to [Render Dashboard](https://render.com/dashboard)
 3. Click **"New +"** button (top right)
 4. Select **"Blueprint"**
@@ -174,7 +180,7 @@ LocationID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY
    ```
    Example: `REACT_APP_API_URL=https://hr-backend-abc123.onrender.com`
 
-6. Select **Plan: Free**
+6. Select **Plan: Starter** (this is the free tier for static sites)
 7. Click **"Create Static Site"**
 8. Wait for deployment (~3-5 minutes)
 9. **Copy your frontend URL**: `https://hr-frontend-XXXX.onrender.com`
@@ -265,6 +271,21 @@ Add to `frontend/package.json`:
 
 **Backend build fails:**
 Check `backend/package.json` has all dependencies listed.
+
+### render.yaml Errors
+
+**Error: "no such plan free for service type web" with static sites**
+- **Solution:** Static sites use `plan: starter` (not `plan: free`)
+- The `starter` plan is free for static sites
+- Only web services use `plan: free`
+
+**Error: "static sites cannot have a region"**
+- **Solution:** Remove the `region` field from static site configuration
+- Static sites are deployed globally, not to specific regions
+
+**Error: "sync: false requires service reference"**
+- **Solution:** These env vars will be filled manually after services are created
+- Or use `fromService` to reference other services
 
 ---
 

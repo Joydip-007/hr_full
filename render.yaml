@@ -30,15 +30,16 @@ services:
       - key: FRONTEND_URL
         sync: false  # Update with actual frontend URL after deployment
 
-  # Frontend Static Site - region field not supported for static sites
+  # Frontend Static Site - use 'starter' plan instead of 'free'
   - type: web
     name: hr-frontend
     runtime: static
-    plan: free
     branch: main
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: build
+    # Static sites use 'starter' plan (which is free)
+    plan: starter
     envVars:
       - key: REACT_APP_API_URL
         value: https://hr-backend.onrender.com  # Update with actual backend URL after deployment
