@@ -30,7 +30,7 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-  # Frontend Static Site (NO region field)
+  # Frontend Static Site - region field not supported for static sites
   - type: web
     name: hr-frontend
     runtime: static
