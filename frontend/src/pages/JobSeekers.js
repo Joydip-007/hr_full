@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { jobSeekerService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { jobSeekerService, authService } from '../services/api';
 
 function JobSeekers() {
   const [jobSeekers, setJobSeekers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is admin
+    const user = authService.getUser();
+    if (!user || user.role !== 'admin') {
+      navigate('/admin/login');
+      return;
+    }
     fetchJobSeekers();
-  }, []);
+  }, [navigate]);
 
   const fetchJobSeekers = async () => {
     try {
@@ -39,14 +47,19 @@ function JobSeekers() {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">Job Seekers</h1>
+      <div className="page-header">
+        <h1 className="page-title">Job Seekers</h1>
+        <span className="admin-badge">Admin Only</span>
+      </div>
 
       <div className="table-container">
         <table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Name</th>
               <th>Location</th>
+              <th>Date of Birth</th>
               <th>Age</th>
               <th>Willing to Move</th>
             </tr>
@@ -54,10 +67,16 @@ function JobSeekers() {
           <tbody>
             {jobSeekers.map((seeker) => (
               <tr key={seeker.job_seeker_id}>
+                <td>{seeker.job_seeker_id}</td>
                 <td>{seeker.first_name} {seeker.last_name}</td>
                 <td>{seeker.city}, {seeker.state}</td>
+                <td>{seeker.dob ? new Date(seeker.dob).toLocaleDateString() : 'N/A'}</td>
                 <td>{calculateAge(seeker.dob)}</td>
-                <td>{seeker.willing_to_move ? 'Yes' : 'No'}</td>
+                <td>
+                  <span className={`badge ${seeker.willing_to_move ? 'badge-accepted' : 'badge-rejected'}`}>
+                    {seeker.willing_to_move ? 'Yes' : 'No'}
+                  </span>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -65,7 +84,7 @@ function JobSeekers() {
       </div>
 
       {jobSeekers.length === 0 && (
-        <p>No job seekers found. Connect to the database to see data.</p>
+        <p className="no-data">No job seekers found.</p>
       )}
     </div>
   );

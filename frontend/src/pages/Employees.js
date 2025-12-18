@@ -1,14 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { employeeService } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { employeeService, authService } from '../services/api';
 
 function Employees() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is admin
+    const user = authService.getUser();
+    if (!user || user.role !== 'admin') {
+      navigate('/admin/login');
+      return;
+    }
     fetchEmployees();
-  }, []);
+  }, [navigate]);
 
   const fetchEmployees = async () => {
     try {
@@ -27,12 +35,16 @@ function Employees() {
 
   return (
     <div className="page-container">
-      <h1 className="page-title">Employees</h1>
+      <div className="page-header">
+        <h1 className="page-title">Employees</h1>
+        <span className="admin-badge">Admin Only</span>
+      </div>
 
       <div className="table-container">
         <table>
           <thead>
             <tr>
+              <th>ID</th>
               <th>Name</th>
               <th>Company</th>
               <th>Position</th>
@@ -44,6 +56,7 @@ function Employees() {
           <tbody>
             {employees.map((employee) => (
               <tr key={employee.employee_id}>
+                <td>{employee.employee_id}</td>
                 <td>{employee.first_name} {employee.last_name}</td>
                 <td>{employee.company_name || 'N/A'}</td>
                 <td>{employee.position_role || 'N/A'}</td>
@@ -61,7 +74,7 @@ function Employees() {
       </div>
 
       {employees.length === 0 && (
-        <p>No employees found. Connect to the database to see data.</p>
+        <p className="no-data">No employees found.</p>
       )}
     </div>
   );
