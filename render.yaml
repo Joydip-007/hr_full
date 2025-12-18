@@ -29,15 +29,15 @@ services:
       - key: FRONTEND_URL
         sync: false
 
-# Frontend Static Site - defined in staticSites section
-staticSites:
-  - name: hr-frontend
+  # Frontend Static Site
+  - type: static
+    name: hr-frontend
     branch: main
     buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: ./frontend/build
+    staticPublishPath: frontend/build
     envVars:
       - key: REACT_APP_API_URL
-        value: https://hr-backend.onrender.com
+        sync: false
 
 databases:
   - name: hr-database
